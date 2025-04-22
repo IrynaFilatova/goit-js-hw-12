@@ -19,7 +19,7 @@ const input = document.querySelector('[name="search-text"]');
 const submitBtn = document.querySelector('[type="submit"]');
 const gallery = document.querySelector('.gallery');
 
-let query = '';
+let currentQuery = '';
 let page = 1;
 const perPage = 15;
 let totalHits = 0;
@@ -30,23 +30,28 @@ hideLoader();
 form.addEventListener('submit', async e => {
   e.preventDefault();
   showLoader();
-  const query = e.target.elements[0].value.trim();
-  if (!query) {
-    showAlert('Please enter a search term.');
+  const currentQuery = e.target.elements[0].value.trim();
+  if (!currentQuery) {
+    hideLoader();
+    iziToast.warning({
+      message: 'Please enter a search term.',
+      position: 'topRight',
+    });
     return;
   }
   page = 1;
   clearGallery();
   hideLoadMoreButton();
-  showLoader();
   try {
-    const data = await getImagesByQuery(query, page, perPage);
+    const data = await getImagesByQuery(currentQuery, page, perPage);
     totalHits = data.totalHits;
 
     if (data.hits.length === 0) {
-      showAlert(
-        'Sorry, there are no images matching your search query. Please try again!'
-      );
+      iziToast.warning({
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
+        position: 'topRight',
+      });
       return;
     }
     createGallery(data.hits);
@@ -65,7 +70,7 @@ const handleLoadMore = async () => {
   hideLoadMoreButton();
   showLoader();
   try {
-    const data = await getImagesByQuery(query, page, perPage);
+    const data = await getImagesByQuery(currentQuery, page, perPage);
     createGallery(data.hits);
 
     if (perPage * page < totalHits) {
